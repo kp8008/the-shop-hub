@@ -207,6 +207,20 @@ namespace ECommerceAPI.Controllers
 
                 await _db.Entry(user).Reference(u => u.UserType).LoadAsync();
                 var token = GenerateJwtToken(user);
+
+                var customerName = user.UserName?.Trim() ?? user.Email?.Split('@')[0] ?? "there";
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _emailService.SendWelcomeAsync(user.Email, customerName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Welcome email failed for {Email}", user.Email);
+                    }
+                });
+
                 var response = new LoginResponseDTO
                 {
                     UserID = user.UserID,

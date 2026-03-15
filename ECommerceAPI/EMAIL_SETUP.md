@@ -1,5 +1,33 @@
 # OTP અને Login Email માટે Gmail Setup (Render પર)
 
+---
+
+## 0. ઇમેઇલ તમારા Gmail (princekatariyaprince@gmail.com) થી જાય, local જેવું (કોઈ પણ login/forgot કરે ત્યારે OTP/ઇમેઇલ જાય)
+
+જો તમે ઇચ્છો કે **મેલ હંમેશા તમારા admin Gmail થી જાય** અને **કોઈ પણ user** (મિત્ર) login / sign up / forgot password કરે ત્યારે **એને ઇમેઇલ/OTP જાય** (local જેવું), તો **Render પર Gmail use કરો, Resend નહીં.**
+
+**Render પર આ કરો:**
+
+1. **Render** → **the-shop-hub-api** → **Environment**
+2. **Resend__ApiKey** હોય તો **delete** કરો (અથવા કદી add ન કર્યું હોય તો ઠીક).  
+   - Resend__ApiKey **ન હોય** ત્યારે backend **Gmail** use કરે, ઇમેઇલ **princekatariyaprince@gmail.com** થી જશે.
+3. આ **Environment Variables** add/અપડેટ કરો:
+
+   | Key | Value |
+   |-----|--------|
+   | **EmailSettings__FromEmail** | `princekatariyaprince@gmail.com` |
+   | **EmailSettings__FromName** | `The Shop Hub` |
+   | **EmailSettings__Password** | તમારો **Gmail App Password** (16 અક્ષર, space વગર) |
+
+   (Gmail App Password કેવી રીતે બનાવવો → નીચે **સેક્શન 2** જુઓ.)
+
+4. **Save Changes** કરો. Service restart થશે.
+5. હવે **local જેવું**: કોઈ પણ user sign up / login / forgot password કરે → ઇમેઇલ/OTP **એ user ના ઈમેઇલ** પર જશે, **From** દેખાશે **princekatariyaprince@gmail.com** (The Shop Hub).
+
+**નોંધ:** Render થી Gmail sometimes slow/timeout કરે; જો ઇમેઇલ ન આવે તો Logs ચેક કરો અને સેક્શન 2 માં App Password ફરી verify કરો.
+
+---
+
 ## 1. પહેલા ચેક કરો: API સુધી request પહોંચે છે?
 
 Console માં **"timeout of 60000ms exceeded"** અને **"Cannot connect to backend API"** = request **Render API સુધી પહોંચતી નથી**. તે સમયે ઇમેઇલ કોડ ચાલે જ નહીં.
@@ -62,3 +90,20 @@ Local પર Gmail ચાલે પણ **Render (live)** પર OTP/લોગિ
 5. હવે backend **Resend** થી ઇમેઇલ મોકલશે (Gmail નહીં). Forgot Password OTP અને Login thank-you ફરી ટેસ્ટ કરો.
 
 નોંધ: જો **Resend__ApiKey** set હોય તો Gmail સેટિંગ ignore થાય અને Resend use થશે. Local પર Resend__ApiKey ન રાખો તો local હજુ Gmail થી ચાલશે.
+
+---
+
+## 5. OTP ઇમેઇલ ન આવે, Login ઇમેઇલ આવે? (Resend 483 Forbidden)
+
+જો **login** પછીની ઇમેઇલ આવે પણ **Forgot Password OTP** ન આવે, અને Console માં **Resend API error: Forbidden (483)** / "from address ... domain" દેખાય:
+
+**કારણ:** Resend free tier માં **domain verify ન કર્યું હોય** ત્યારે તમે **ફક્ત તમારા own email** (જે ઈમેઇલથી Resend account બનાવ્યું) **પર જ** મોકલી શકો. બીજા ઈમેઇલ (જેમ કે testcustomer@gmail.com) પર મોકલવા Resend block કરે છે.
+
+**ઉપાય (કોઈ એક):**
+
+- **A) ટેસ્ટ માટે:** Forgot Password માં **તમારો જ ઈમેઇલ** (princekatariyaprince@gmail.com) લખી Send OTP કરો → OTP ઇમેઇલ આવવી જોઈએ. (Login ઇમેઇલ પણ આ ઈમેઇલ પર જ આવે છે.)
+- **B) કોઈ પણ user પર OTP મોકલવા:** Resend પર **domain verify** કરો:
+  1. **resend.com** → **Domains** → **Add Domain** → તમારો domain (e.g. તમારી siteનો domain) add કરો.
+  2. Resend જે DNS records બતાવે (SPF, DKIM, etc.) એ તમારા domain provider માં add કરો → Verify.
+  3. **Render** env માં **Resend__From** બદલો, જેમ કે: `The Shop Hub <noreply@yourdomain.com>` (verified domain વાળો ઈમેઇલ).
+  4. Redeploy. પછી કોઈ પણ ઈમેઇલ પર OTP મોકલી શકશો.

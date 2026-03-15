@@ -41,6 +41,14 @@ namespace ECommerceAPI.Services
             await SendAsync(toEmail, subject, body, cancellationToken);
         }
 
+        public async Task SendWelcomeAsync(string toEmail, string customerName, CancellationToken cancellationToken = default)
+        {
+            var name = string.IsNullOrWhiteSpace(customerName) ? "there" : customerName.Trim();
+            var subject = "Welcome to The Shop Hub!";
+            var body = $"Hi {name},{Environment.NewLine}{Environment.NewLine}Thank you for signing up. You can now shop, add to cart, save wishlist and place orders. Have a great day!{Environment.NewLine}{Environment.NewLine}- The Shop Hub";
+            await SendAsync(toEmail, subject, body, cancellationToken);
+        }
+
         private async Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(_settings.ApiKey))
@@ -50,6 +58,7 @@ namespace ECommerceAPI.Services
 
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + _settings.ApiKey.Trim());
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "TheShopHub-API/1.0");
 
             var payload = new Dictionary<string, object>
             {
