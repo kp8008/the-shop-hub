@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, ShoppingCart, X } from 'lucide-react'
@@ -19,6 +19,18 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSignUpChoice, setShowSignUpChoice] = useState(false)
+  const googleBtnRef = useRef(null)
+  const [googleBtnWidth, setGoogleBtnWidth] = useState(320)
+
+  useEffect(() => {
+    if (!googleBtnRef.current) return
+    const ro = new ResizeObserver(() => {
+      if (googleBtnRef.current) setGoogleBtnWidth(googleBtnRef.current.offsetWidth)
+    })
+    ro.observe(googleBtnRef.current)
+    setGoogleBtnWidth(googleBtnRef.current.offsetWidth)
+    return () => ro.disconnect()
+  }, [showSignUpChoice])
 
   const navigate = useNavigate()
   const { login } = useAuthStore()
@@ -248,33 +260,35 @@ const LoginPage = () => {
           </div>
 
           {googleClientId ? (
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                try {
-                  const decoded = jwtDecode(credentialResponse.credential)
-                  navigate('/register', {
-                    replace: true,
-                    state: {
-                      fromGoogle: true,
-                      googleEmail: decoded.email || '',
-                      googleFirstName: decoded.given_name || '',
-                      googleLastName: decoded.family_name || ''
-                    }
-                  })
-                  toast.success('Fill password and mobile to complete sign up')
-                } catch (e) {
-                  toast.error('Could not get Google profile')
-                }
-              }}
-              onError={() => toast.error('Google sign-in failed')}
-              useOneTap={false}
-              theme="outline"
-              size="large"
-              type="standard"
-              shape="rectangular"
-              text="continue_with"
-              width="100%"
-            />
+            <div ref={googleBtnRef} className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  try {
+                    const decoded = jwtDecode(credentialResponse.credential)
+                    navigate('/register', {
+                      replace: true,
+                      state: {
+                        fromGoogle: true,
+                        googleEmail: decoded.email || '',
+                        googleFirstName: decoded.given_name || '',
+                        googleLastName: decoded.family_name || ''
+                      }
+                    })
+                    toast.success('Fill password and mobile to complete sign up')
+                  } catch (e) {
+                    toast.error('Could not get Google profile')
+                  }
+                }}
+                onError={() => toast.error('Google sign-in failed')}
+                useOneTap={false}
+                theme="outline"
+                size="large"
+                type="standard"
+                shape="rectangular"
+                text="continue_with"
+                width={googleBtnWidth}
+              />
+            </div>
           ) : (
             <button
               type="button"

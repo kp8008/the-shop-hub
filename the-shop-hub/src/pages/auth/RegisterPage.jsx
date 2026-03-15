@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, Eye, EyeOff, ShoppingCart, Phone } from 'lucide-react'
@@ -22,8 +22,20 @@ const RegisterPage = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const googleBtnRef = useRef(null)
+  const [googleBtnWidth, setGoogleBtnWidth] = useState(320)
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
+
+  useEffect(() => {
+    if (!googleBtnRef.current) return
+    const ro = new ResizeObserver(() => {
+      if (googleBtnRef.current) setGoogleBtnWidth(googleBtnRef.current.offsetWidth)
+    })
+    ro.observe(googleBtnRef.current)
+    setGoogleBtnWidth(googleBtnRef.current.offsetWidth)
+    return () => ro.disconnect()
+  }, [])
 
   // Pre-fill name and email from Google (when coming from Login page after Google sign-in)
   useEffect(() => {
@@ -150,9 +162,8 @@ const RegisterPage = () => {
           {googleClientId && (
             <div className="mb-6 w-full">
               <p className="text-sm text-gray-500 mb-3 font-jost">Fill name & email from Google, then add password and mobile below.</p>
-              <div className="w-full flex items-stretch justify-center" style={{ minHeight: 48 }}>
-                <div className="w-full flex items-center justify-center [&>div]:!w-full [&>div]:!max-w-[100%] [&>div]:!min-w-0 [&>div>div]:!w-full [&>iframe]:!w-full [&>iframe]:!min-h-[48px] [&>iframe]:!h-[48px]">
-                  <GoogleLogin
+              <div ref={googleBtnRef} className="w-full flex justify-center">
+                <GoogleLogin
                   onSuccess={(credentialResponse) => {
                     try {
                       const decoded = jwtDecode(credentialResponse.credential)
@@ -174,9 +185,8 @@ const RegisterPage = () => {
                   type="standard"
                   shape="rectangular"
                   text="continue_with"
-                  width="100%"
-                  />
-                </div>
+                  width={googleBtnWidth}
+                />
               </div>
             </div>
           )}
