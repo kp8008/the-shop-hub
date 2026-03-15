@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Marcellus&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Jost', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    letter-spacing: 0.03rem;
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Marcellus', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', serif;
+    font-weight: 400;
+    line-height: 1.24;
+    color: #111111;
+  }
+}
+
+.category-marquee-wrapper {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.category-marquee {
+  display: inline-flex;
+  gap: 2.5rem;
+  white-space: nowrap;
+  animation: category-marquee-scroll 18s linear infinite;
+  align-items: center;
+}
+
+.category-marquee-wrapper:hover .category-marquee {
+  animation-play-state: paused;
+}
+
+@keyframes category-marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+  
+  .gradient-primary {
+    @apply bg-gradient-to-r from-kaira to-kaira-dark;
+  }
+  
+  .gradient-secondary {
+    @apply bg-gradient-to-r from-purple-500 to-pink-500;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-[#111] text-white font-jost text-sm uppercase tracking-wide hover:bg-kaira-dark transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-white text-[#111] border-2 border-[#111] font-jost text-sm uppercase tracking-wide hover:bg-[#111] hover:text-white transition-colors;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-200 font-jost focus:border-kaira focus:ring-1 focus:ring-kaira outline-none transition-all duration-200;
+  }
+}
+
+/* ========== Kaira-style animations ========== */
+
+/* Image zoom effect (Kaira .image-zoom-effect) - parent shrinks slightly, image zooms on hover */
+.image-zoom-effect {
+  display: flex;
+  overflow: hidden;
+}
+.image-zoom-effect .image-holder,
+.image-zoom-effect [class*='aspect-'] {
+  width: 100%;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.image-zoom-effect:hover .image-holder,
+.image-zoom-effect:hover [class*='aspect-'] {
+  transform: scale(0.98);
+}
+.image-zoom-effect img {
+  transform: scale(1);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-zoom-effect:hover img {
+  transform: scale(1.08);
+}
+
+/* Fade-in / Fade-up for scroll (Kaira AOS-style, use with Intersection Observer or motion) */
+.animate-fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.animate-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.animate-fade-in {
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+.animate-fade-in.is-visible {
+  opacity: 1;
+}
+
+/* Link/button smooth transition (Kaira .transition all .5s) */
+.nav-link-kaira,
+a.transition-kaira,
+button.transition-kaira {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Custom Scrollbar - Kaira theme */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F1F1F0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8C907E;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5e624e;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Kaira-style nav link underline */
+.nav-link-kaira {
+  position: relative;
+}
+.nav-link-kaira::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1px;
+  background: var(--tw-gradient-from, #111);
+  transition: width 0.4s ease;
+}
+.nav-link-kaira:hover::after,
+.nav-link-kaira:focus::after {
+  width: 100%;
+}
+.nav-link-kaira.text-kaira::after {
+  background: #8C907E;
+}

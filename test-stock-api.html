@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Stock Quantity API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            border-color: #d32f2f;
+        }
+        .success {
+            color: #388e3c;
+            background: #e8f5e9;
+            border-color: #388e3c;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 500px;
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Stock Quantity API Tester</h1>
+        
+        <div class="info">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Login to your app first to get a token</li>
+                <li>Open browser console (F12) and find the token in localStorage</li>
+                <li>Paste the token below</li>
+                <li>Click "Test API" to see what data the backend returns</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Step 1: Enter Your Token</h2>
+            <label>JWT Token (from localStorage):</label>
+            <input type="text" id="token" placeholder="Paste your JWT token here">
+            <p style="color: #666; font-size: 14px;">
+                To get token: Open browser console (F12) → Console tab → Type: 
+                <code>JSON.parse(localStorage.getItem('auth-storage')).state.token</code>
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Step 2: Test API Endpoints</h2>
+            <button onclick="testGetProducts()">Test GET Products</button>
+            <button onclick="testDatabaseColumn()">Check Database Column</button>
+            <button onclick="clearResults()">Clear Results</button>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 3: Test Update Product</h2>
+            <label>Product ID to Update:</label>
+            <input type="number" id="productId" placeholder="Enter product ID (e.g., 1)">
+            
+            <label>New Stock Quantity:</label>
+            <input type="number" id="stockQuantity" placeholder="Enter stock quantity (e.g., 100)">
+            
+            <button onclick="testUpdateProduct()">Test Update</button>
+            
+            <div id="updateResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://localhost:7077/api';
+
+        function getToken() {
+            const token = document.getElementById('token').value.trim();
+            if (!token) {
+                alert('Please enter your JWT token first!');
+                return null;
+            }
+            return token;
+        }
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result ' + (isError ? 'error' : 'success');
+            element.textContent = content;
+        }
+
+        async function testGetProducts() {
+            const token = getToken();
+            if (!token) return;
+
+            showResult('result', 'Loading...', false);
+
+            try {
+                const response = await fetch(`${API_BASE}/Product/admin`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                let output = '✅ SUCCESS! API Response:\n\n';
+                output += `Total Products: ${data.length}\n\n`;
+                
+                if (data.length > 0) {
+                    output += '📦 First Product:\n';
+                    output += JSON.stringify(data[0], null, 2);
+                    output += '\n\n';
+                    
+                    output += '🔍 Stock Quantity Check:\n';
+                    output += `- StockQuantity (PascalCase): ${data[0].StockQuantity}\n`;
+                    output += `- stockQuantity (camelCase): ${data[0].stockQuantity}\n`;
+                    output += `- Type: ${typeof data[0].StockQuantity}\n\n`;
+                    
+                    output += '📋 All Fields:\n';
+                    output += Object.keys(data[0]).join(', ');
+                    
+                    if (data[0].StockQuantity === undefined && data[0].stockQuantity === undefined) {
+                        output += '\n\n❌ ERROR: StockQuantity field is missing from response!';
+                        output += '\n\nPossible causes:';
+                        output += '\n1. Backend not restarted after code changes';
+                        output += '\n2. Database column not added';
+                        output += '\n3. Backend code changes not saved';
+                    } else if (data[0].StockQuantity === 0 || data[0].stockQuantity === 0) {
+                        output += '\n\n⚠️ WARNING: StockQuantity is 0';
+                        output += '\n\nThis means:';
+                        output += '\n1. Database has the column ✓';
+                        output += '\n2. Backend is returning the field ✓';
+                        output += '\n3. But the value in database is 0';
+                        output += '\n\nSolution: Update the database values';
+                    } else {
+                        output += '\n\n✅ Everything looks good!';
+                    }
+                }
+                
+                showResult('result', output, false);
+            } catch (error) {
+                showResult('result', `❌ ERROR:\n\n${error.message}\n\nMake sure:\n1. Backend is running\n2. Token is valid\n3. You are logged in as admin`, true);
+            }
+        }
+
+        async function testUpdateProduct() {
+            const token = getToken();
+            if (!token) return;
+
+            const productId = document.getElementById('productId').value;
+            const stockQuantity = document.getElementById('stockQuantity').value;
+
+            if (!productId || !stockQuantity) {
+                alert('Please enter both Product ID and Stock Quantity');
+                return;
+            }
+
+            showResult('updateResult', 'Updating...', false);
+
+            try {
+                // First, get the product
+                const getResponse = await fetch(`${API_BASE}/Product/${productId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!getResponse.ok) {
+                    throw new Error(`Failed to get product: ${getResponse.statusText}`);
+                }
+
+                const product = await getResponse.json();
+
+                // Create FormData for update
+                const formData = new FormData();
+                formData.append('ProductID', productId);
+                formData.append('ProductName', product.productName || product.ProductName);
+                formData.append('ProductCode', product.productCode || product.ProductCode);
+                formData.append('Price', product.price || product.Price);
+                formData.append('StockQuantity', stockQuantity);
+                formData.append('CategoryID', product.categoryID || product.CategoryID);
+                formData.append('IsActive', 'true');
+
+                // Update the product
+                const updateResponse = await fetch(`${API_BASE}/Product/${productId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!updateResponse.ok) {
+                    const errorData = await updateResponse.json();
+                    throw new Error(`Update failed: ${JSON.stringify(errorData)}`);
+                }
+
+                const result = await updateResponse.json();
+                
+                let output = '✅ UPDATE SUCCESS!\n\n';
+                output += 'Response:\n';
+                output += JSON.stringify(result, null, 2);
+                output += '\n\n';
+                output += `Stock Quantity in response: ${result.StockQuantity || result.stockQuantity || 'NOT FOUND'}`;
+                
+                if (result.StockQuantity === undefined && result.stockQuantity === undefined) {
+                    output += '\n\n❌ WARNING: StockQuantity not in response!';
+                    output += '\nThe update might have worked, but backend is not returning the field.';
+                }
+                
+                showResult('updateResult', output, false);
+            } catch (error) {
+                showResult('updateResult', `❌ ERROR:\n\n${error.message}`, true);
+            }
+        }
+
+        function testDatabaseColumn() {
+            const info = `
+📊 To check if database column exists:
+
+1. Open SQL Server Management Studio
+2. Connect to your database
+3. Run this query:
+
+SELECT COLUMN_NAME, DATA_TYPE 
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Products' 
+AND COLUMN_NAME = 'StockQuantity'
+
+Expected result: One row showing StockQuantity column
+
+4. Check actual data:
+
+SELECT TOP 5 ProductID, ProductName, StockQuantity 
+FROM Products
+
+If all StockQuantity values are 0, run:
+
+UPDATE Products SET StockQuantity = 100
+            `;
+            showResult('result', info, false);
+        }
+
+        function clearResults() {
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('updateResult').style.display = 'none';
+        }
+
+        // Auto-fill token if available
+        window.onload = function() {
+            try {
+                const authStorage = localStorage.getItem('auth-storage');
+                if (authStorage) {
+                    const token = JSON.parse(authStorage).state.token;
+                    if (token) {
+                        document.getElementById('token').value = token;
+                    }
+                }
+            } catch (e) {
+                console.log('Could not auto-fill token');
+            }
+        };
+    </script>
+</body>
+</html>
