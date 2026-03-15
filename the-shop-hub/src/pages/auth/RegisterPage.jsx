@@ -185,7 +185,7 @@ const RegisterPage = () => {
                   type="standard"
                   shape="rectangular"
                   text="continue_with"
-                  width={googleBtnWidth}
+                  width={typeof googleBtnWidth === 'number' && googleBtnWidth > 0 ? googleBtnWidth : 320}
                 />
               </div>
             </div>
