@@ -148,32 +148,34 @@ const RegisterPage = () => {
           </div>
 
           {googleClientId && (
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 mb-2 font-jost">Fill name & email from Google, then add password and mobile below.</p>
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  try {
-                    const decoded = jwtDecode(credentialResponse.credential)
-                    setFormData(prev => ({
-                      ...prev,
-                      email: decoded.email || prev.email,
-                      firstName: decoded.given_name || prev.firstName,
-                      lastName: decoded.family_name || prev.lastName
-                    }))
-                    toast.success('Name and email filled. Now enter password and mobile.')
-                  } catch (e) {
-                    toast.error('Could not get Google profile')
-                  }
-                }}
-                onError={() => toast.error('Google sign-in failed')}
-                useOneTap={false}
-                theme="outline"
-                size="large"
-                type="standard"
-                shape="rectangular"
-                text="continue_with"
-                width="100%"
-              />
+            <div className="mb-6 w-full">
+              <p className="text-sm text-gray-500 mb-3 font-jost">Fill name & email from Google, then add password and mobile below.</p>
+              <div className="w-full min-h-[52px] flex items-center justify-center [&>div]:!w-full [&>div]:!min-w-0 [&>div>div]:!w-full [&>iframe]:!w-full [&>iframe]:!min-h-[48px]">
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    try {
+                      const decoded = jwtDecode(credentialResponse.credential)
+                      setFormData(prev => ({
+                        ...prev,
+                        email: decoded.email || prev.email,
+                        firstName: decoded.given_name || prev.firstName,
+                        lastName: decoded.family_name || prev.lastName
+                      }))
+                      toast.success('Name and email filled. Now enter password and mobile.')
+                    } catch (e) {
+                      toast.error('Could not get Google profile')
+                    }
+                  }}
+                  onError={() => toast.error('Google sign-in failed')}
+                  useOneTap={false}
+                  theme="outline"
+                  size="large"
+                  type="standard"
+                  shape="rectangular"
+                  text="continue_with"
+                  width="100%"
+                />
+              </div>
             </div>
           )}
 
@@ -223,24 +225,29 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Mobile – India +91 fixed, 10 digits only */}
+            {/* Mobile – India +91 fixed (not editable), only 10 digits in box */}
             <div>
               <label className="block text-sm font-semibold mb-2">Mobile</label>
-              <div className="flex border border-gray-200 focus-within:border-kaira focus-within:ring-1 focus-within:ring-kaira">
-                <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-r border-gray-200 text-gray-700 font-jost select-none">
+              <div className="flex border border-gray-200 focus-within:border-kaira focus-within:ring-1 focus-within:ring-kaira rounded-sm overflow-hidden">
+                <div className="flex items-center gap-1.5 min-w-[100px] px-4 py-3 bg-gray-100 border-r border-gray-200 text-gray-800 font-jost font-medium select-none shrink-0">
                   <span className="text-lg" aria-hidden>🇮🇳</span>
                   <span>+91</span>
                 </div>
                 <input
                   type="tel"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   autoComplete="tel-national"
                   required
                   maxLength={10}
                   value={formData.mobile}
+                  onInput={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setFormData(prev => ({ ...prev, mobile: v }))
+                  }}
                   onChange={(e) => {
                     const v = e.target.value.replace(/\D/g, '').slice(0, 10)
-                    setFormData({ ...formData, mobile: v })
+                    setFormData(prev => ({ ...prev, mobile: v }))
                   }}
                   className="w-full px-4 py-3 font-jost outline-none"
                   placeholder="9876543210"
