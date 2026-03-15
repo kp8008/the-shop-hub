@@ -20,15 +20,17 @@ namespace ECommerceAPI.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IMemoryCache _cache;
+        private readonly ILogger<AuthController> _logger;
         private const string OtpCacheKeyPrefix = "pwreset:";
         private static readonly TimeSpan OtpExpiry = TimeSpan.FromMinutes(10);
 
-        public AuthController(ApplicationDbContext db, IConfiguration configuration, IEmailService emailService, IMemoryCache cache)
+        public AuthController(ApplicationDbContext db, IConfiguration configuration, IEmailService emailService, IMemoryCache cache, ILogger<AuthController> logger)
         {
             _db = db;
             _configuration = configuration;
             _emailService = emailService;
             _cache = cache;
+            _logger = logger;
         }
 
         #region LOGIN
@@ -66,7 +68,10 @@ namespace ECommerceAPI.Controllers
                     {
                         await _emailService.SendLoginThankYouAsync(user.Email, customerName);
                     }
-                    catch { /* ignore email errors */ }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Login thank-you email failed for {Email}. Check EmailSettings (FromEmail/Password).", user.Email);
+                    }
                 });
 
                 var response = new LoginResponseDTO

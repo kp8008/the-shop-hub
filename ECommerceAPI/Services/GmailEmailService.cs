@@ -43,7 +43,7 @@ namespace ECommerceAPI.Services
         private async Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(_settings.FromEmail) || string.IsNullOrWhiteSpace(_settings.Password))
-                return; // Skip if not configured (e.g. dev without Gmail)
+                throw new InvalidOperationException("Email not configured. Set EmailSettings:FromEmail and EmailSettings:Password (e.g. in appsettings or Render env vars).");
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromEmail));
@@ -52,6 +52,7 @@ namespace ECommerceAPI.Services
             message.Body = new TextPart("plain") { Text = body };
 
             using var client = new SmtpClient();
+            client.Timeout = 60000; // 60 seconds (Render → Gmail can be slow; default 10s often times out)
             await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken);
             await client.AuthenticateAsync(_settings.FromEmail, _settings.Password, cancellationToken);
             await client.SendAsync(message, cancellationToken);
