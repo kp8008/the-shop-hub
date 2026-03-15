@@ -32,6 +32,14 @@ api.interceptors.request.use(
   }
 )
 
+// Public endpoints that must not trigger redirect on 401 (guest can browse)
+const isPublicGet = (config) => {
+  const url = (config?.url || '').toLowerCase()
+  return config?.method === 'get' && (
+    url.includes('/product') || url.includes('/category')
+  )
+}
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
@@ -40,7 +48,10 @@ api.interceptors.response.use(
     
     if (error.response?.status === 401) {
       localStorage.removeItem('auth-storage')
-      window.location.href = '/login'
+      // Don't redirect to login for public GET (Product/Category) so guest can see products
+      if (!isPublicGet(error.config)) {
+        window.location.href = '/login'
+      }
     }
     
     // Network error

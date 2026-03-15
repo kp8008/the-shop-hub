@@ -52,8 +52,9 @@ const RegisterPage = () => {
       return
     }
 
-    if (!formData.mobile?.trim()) {
-      toast.error('Mobile number is required')
+    const mobileDigits = (formData.mobile || '').replace(/\D/g, '')
+    if (mobileDigits.length !== 10) {
+      toast.error('Please enter a valid 10 digit mobile number')
       return
     }
 
@@ -66,7 +67,7 @@ const RegisterPage = () => {
         LastName: formData.lastName.trim(),
         Email: formData.email.trim(),
         Password: formData.password,
-        Mobile: formData.mobile.trim()
+        Mobile: mobileDigits
       }
       const { data } = await api.post('/Auth/register', registerPayload)
       const token = data.token ?? data.Token
@@ -222,20 +223,30 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Mobile */}
+            {/* Mobile – India +91 fixed, 10 digits only */}
             <div>
               <label className="block text-sm font-semibold mb-2">Mobile</label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="flex border border-gray-200 focus-within:border-kaira focus-within:ring-1 focus-within:ring-kaira">
+                <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-r border-gray-200 text-gray-700 font-jost select-none">
+                  <span className="text-lg" aria-hidden>🇮🇳</span>
+                  <span>+91</span>
+                </div>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
                   required
+                  maxLength={10}
                   value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 font-jost focus:border-kaira focus:ring-1 focus:ring-kaira outline-none pl-12"
-                  placeholder="+1 234 567 8900"
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setFormData({ ...formData, mobile: v })
+                  }}
+                  className="w-full px-4 py-3 font-jost outline-none"
+                  placeholder="9876543210"
                 />
               </div>
+              <p className="mt-1 text-xs text-gray-500 font-jost">10 digit mobile number only</p>
             </div>
 
             {/* Password */}
