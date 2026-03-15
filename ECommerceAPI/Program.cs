@@ -120,9 +120,19 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 15 * 1024 * 1024; // 15 MiB
 });
 
-// Email (Gmail) and OTP cache for password reset
+// Email: Resend (live/Render) or Gmail (local). If Resend__ApiKey set, use Resend; else Gmail.
 builder.Services.Configure<ECommerceAPI.Services.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddSingleton<IEmailService, GmailEmailService>();
+builder.Services.Configure<ECommerceAPI.Services.ResendSettings>(builder.Configuration.GetSection("Resend"));
+builder.Services.AddHttpClient();
+var resendApiKey = builder.Configuration["Resend:ApiKey"] ?? "";
+if (!string.IsNullOrWhiteSpace(resendApiKey))
+{
+    builder.Services.AddSingleton<IEmailService, ECommerceAPI.Services.ResendEmailService>();
+}
+else
+{
+    builder.Services.AddSingleton<IEmailService, GmailEmailService>();
+}
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();
