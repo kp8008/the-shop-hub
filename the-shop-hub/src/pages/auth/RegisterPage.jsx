@@ -52,11 +52,23 @@ const RegisterPage = () => {
       return
     }
 
+    if (!formData.mobile?.trim()) {
+      toast.error('Mobile number is required')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { confirmPassword, ...registerData } = formData
-      const { data } = await api.post('/Auth/register', registerData)
+      // Backend expects PascalCase (FirstName, LastName, Email, Password, Mobile)
+      const registerPayload = {
+        FirstName: formData.firstName.trim(),
+        LastName: formData.lastName.trim(),
+        Email: formData.email.trim(),
+        Password: formData.password,
+        Mobile: formData.mobile.trim()
+      }
+      const { data } = await api.post('/Auth/register', registerPayload)
       const token = data.token ?? data.Token
       const userId = data.userID ?? data.UserID
       const userName = data.userName ?? data.UserName ?? ''
@@ -79,7 +91,11 @@ const RegisterPage = () => {
         navigate('/login')
       }
     } catch (error) {
-      const msg = error.response?.data?.message || 'Registration failed'
+      if (error.response?.status === 404) {
+        toast.error('Cannot reach server. Check your connection or try again later.')
+        return
+      }
+      const msg = error.response?.data?.message || error.message || 'Registration failed'
       const isEmailExists = msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('already registered')
       toast.error(isEmailExists ? 'This email is already registered. Please sign in or use another email.' : msg)
     } finally {
