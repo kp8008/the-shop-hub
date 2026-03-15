@@ -18,10 +18,12 @@ namespace ECommerceAPI.Services
     public class GmailEmailService : IEmailService
     {
         private readonly EmailSettings _settings;
+        private readonly ILogger<GmailEmailService> _logger;
 
-        public GmailEmailService(IOptions<EmailSettings> settings)
+        public GmailEmailService(IOptions<EmailSettings> settings, ILogger<GmailEmailService> logger)
         {
             _settings = settings?.Value ?? new EmailSettings();
+            _logger = logger;
         }
 
         public async Task SendPasswordResetOtpAsync(string toEmail, string otp, CancellationToken cancellationToken = default)
@@ -45,6 +47,8 @@ namespace ECommerceAPI.Services
             if (string.IsNullOrWhiteSpace(_settings.FromEmail) || string.IsNullOrWhiteSpace(_settings.Password))
                 throw new InvalidOperationException("Email not configured. Set EmailSettings:FromEmail and EmailSettings:Password (e.g. in appsettings or Render env vars).");
 
+            _logger.LogInformation("Email: sending to {To}, subject: {Subject}", toEmail, subject);
+
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromEmail));
             message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
@@ -52,11 +56,20 @@ namespace ECommerceAPI.Services
             message.Body = new TextPart("plain") { Text = body };
 
             using var client = new SmtpClient();
-            client.Timeout = 60000; // 60 seconds (Render → Gmail can be slow; default 10s often times out)
-            await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken);
-            await client.AuthenticateAsync(_settings.FromEmail, _settings.Password, cancellationToken);
-            await client.SendAsync(message, cancellationToken);
-            await client.DisconnectAsync(true, cancellationToken);
+            client.Timeout = 60000; // 60 seconds (Render → Gmail can be slow)
+            try
+            {
+                await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken);
+                await client.AuthenticateAsync(_settings.FromEmail, _settings.Password, cancellationToken);
+                await client.SendAsync(message, cancellationToken);
+                await client.DisconnectAsync(true, cancellationToken);
+                _logger.LogInformation("Email sent successfully to {To}", toEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Email failed to {To}: {Message}", toEmail, ex.Message);
+                throw;
+            }
         }
     }
 }
