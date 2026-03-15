@@ -23,14 +23,14 @@ const ForgotPasswordPage = () => {
     }
     setLoading(true)
     try {
-      await api.post('/Auth/request-password-reset-otp', { Email: email.trim() }, { timeout: 15000 })
+      await api.post('/Auth/request-password-reset-otp', { Email: email.trim() }, { timeout: 60000 })
       toast.success('OTP sent to your email. Check inbox (and spam).')
       setStep(2)
     } catch (err) {
       const msg = err.response?.data?.message || err.message
       const isNetwork = !err.response && (err.code === 'ECONNABORTED' || err.message?.includes('timeout'))
       toast.error(isNetwork
-        ? 'Could not reach server. Check your connection. If on live site, the API may be down.'
+        ? 'Server is taking too long (may be waking up). Try again in a few seconds.'
         : (msg || 'Failed to send OTP'))
     } finally {
       setLoading(false)
@@ -57,7 +57,7 @@ const ForgotPasswordPage = () => {
         Email: email.trim(),
         Otp: otp.trim(),
         NewPassword: newPassword
-      }, { timeout: 15000 })
+      }, { timeout: 60000 })
       toast.success('Password reset successfully. Sign in with new password.')
       navigate('/login', { replace: true })
     } catch (err) {

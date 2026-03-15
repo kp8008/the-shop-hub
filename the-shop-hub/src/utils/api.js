@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:707
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 20000,
+  timeout: 55000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -58,7 +58,11 @@ api.interceptors.response.use(
     // Network error
     if (!error.response) {
       console.error('Network Error: Cannot connect to backend API at', API_BASE_URL)
-      console.error('Make sure your .NET backend is running on https://localhost:7077')
+      if (API_BASE_URL.includes('localhost')) {
+        console.error('Make sure your .NET backend is running on https://localhost:7077')
+      } else {
+        console.error('Server may be starting (cold start) or down. Try again in a minute.')
+      }
     }
     
     return Promise.reject(error)
